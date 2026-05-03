@@ -172,8 +172,6 @@ services:
     image: healthdm-api:${TAG}
     restart: unless-stopped
     env_file: .env
-    environment:
-      CXHC_SEAL_MASTER_KEY: ${CXHC_SEAL_MASTER_KEY:-}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -183,13 +181,13 @@ services:
     volumes:
       - ./settings:/app/settings
       - ./reports:/app/reports
+      - runtime_state:/app/.runtime-state
+      - /etc/machine-id:/etc/machine-id:ro
 
   worker:
     image: healthdm-api:${TAG}
     restart: unless-stopped
     env_file: .env
-    environment:
-      CXHC_SEAL_MASTER_KEY: ${CXHC_SEAL_MASTER_KEY:-}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -197,19 +195,21 @@ services:
     volumes:
       - ./settings:/app/settings
       - ./reports:/app/reports
+      - runtime_state:/app/.runtime-state
+      - /etc/machine-id:/etc/machine-id:ro
 
   beat:
     image: healthdm-api:${TAG}
     restart: unless-stopped
     env_file: .env
-    environment:
-      CXHC_SEAL_MASTER_KEY: ${CXHC_SEAL_MASTER_KEY:-}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
     command: celery -A worker.app beat --loglevel=info
     volumes:
       - ./settings:/app/settings
+      - runtime_state:/app/.runtime-state
+      - /etc/machine-id:/etc/machine-id:ro
 
   frontend:
     image: healthdm-frontend:${TAG}
@@ -228,6 +228,7 @@ services:
 
 volumes:
   postgres_data:
+  runtime_state:
 COMPOSE
   echo "Generated ${root}/docker-compose.yml"
 }
