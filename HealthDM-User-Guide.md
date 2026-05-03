@@ -47,7 +47,7 @@ A persistent **left sidebar** is always visible. It groups every section under l
 
 The **theme switcher** lives at the very bottom of the sidebar — three buttons labelled `Dark` `Light` `Mono`. Use it at any time; the choice persists across page loads.
 
-![HealthDM main layout — sidebar and Cortex Platform overview](screenshots/g-01-cortex-overview.png)
+![HealthDM main layout — sidebar and Cortex Platform overview](guides/screenshots/g-01-cortex-overview.png)
 
 *Figure 1 — Main layout: sidebar on the left, content area on the right. The active section is highlighted in the sidebar.*
 
@@ -79,7 +79,7 @@ The **Refine results** panel lets you narrow which category tiles are shown. The
 
 Click one or more buttons to activate them; the category tiles below update instantly to show only categories that contain matching checks. Click **Clear all** to reset. Leaving all buttons unselected shows everything.
 
-![Cortex Platform — Fail filter active, filtered category tiles](screenshots/g-02-cortex-filters.png)
+![Cortex Platform — Fail filter active, filtered category tiles](guides/screenshots/g-02-cortex-filters.png)
 
 *Figure 2 — Filtering by **Fail** status: only categories that contain failed checks are shown. Combine status and severity filters to narrow further.*
 
@@ -99,7 +99,7 @@ Three export formats are available from the toolbar: **HTML** **PDF** **Excel**.
 4. Tick or untick individual checkboxes to fine-tune the selection. The **Export N** button at the bottom shows how many checks are included.
 5. Click **Export N** to download the file. Click **Cancel** to close without exporting.
 
-![Cortex export modal — check selection with filter pills and group expand](screenshots/g-03-cortex-export-modal.png)
+![Cortex export modal — check selection with filter pills and group expand](guides/screenshots/g-03-cortex-export-modal.png)
 
 *Figure 3 — Cortex export modal: use the filter pills to seed the selection, expand groups to adjust individual checks, then click **Export N** to download.*
 
@@ -109,7 +109,7 @@ Three export formats are available from the toolbar: **HTML** **PDF** **Excel**.
 
 Click any **category tile** on the Cortex Platform page to open the category detail view. This shows every individual check in that category, with its own status and severity.
 
-![Cortex category detail — check list with status, severity, and filters](screenshots/g-04-cortex-category.png)
+![Cortex category detail — check list with status, severity, and filters](guides/screenshots/g-04-cortex-category.png)
 
 *Figure 4 — Category detail view: breadcrumb navigation at the top, check list below. Each row shows the check name, severity badge, and current status.*
 
@@ -140,7 +140,7 @@ The default tab shows:
 - **Open Failures** — combined count of health + policy failures.
 - **Critical Severity** — count of critical-level findings across both health and policy.
 
-![Dashboard Overview tab — score, check distribution, top recommendations](screenshots/g-05-dashboard-overview.png)
+![Dashboard Overview tab — score, check distribution, top recommendations](guides/screenshots/g-05-dashboard-overview.png)
 
 *Figure 5 — Dashboard Overview tab: score summary, check distribution, and top recommendations at a glance.*
 
@@ -155,7 +155,7 @@ Click the **Trends** tab to switch to the historical view. This shows:
 - **Score History chart** — line chart of the overall health score over time (x-axis = date, y-axis = 0–100%).
 - **Category Trends** — per-category trend breakdown.
 
-![Dashboard Trends tab — score history chart and category trends](screenshots/g-06-dashboard-trends.png)
+![Dashboard Trends tab — score history chart and category trends](guides/screenshots/g-06-dashboard-trends.png)
 
 *Figure 6 — Dashboard Trends tab: score history over time and per-category trend breakdown.*
 
@@ -174,7 +174,7 @@ The **Policies & Profiles** page lets you import Cortex `.export` bundles (preve
 3. The app parses the bundle, stores it, and compares it against the configured baselines automatically.
 4. The imported bundle appears in the list with its comparison score and per-rule status.
 
-![Policies & Profiles page — import zone and bundle list](screenshots/g-07-policies.png)
+![Policies & Profiles page — import zone and bundle list](guides/screenshots/g-07-policies.png)
 
 *Figure 7 — Policies & Profiles page: drag-and-drop import zone at the top, imported bundles listed below with scores and actions.*
 
@@ -190,7 +190,7 @@ Three export formats are available from the toolbar: **HTML** **PDF** **Excel**.
 4. Tick or untick profiles as needed. The **Export N** button reflects the current selection count.
 5. Click **Export N** to download.
 
-![Policies export modal — profile groups with filter pills and export button](screenshots/g-08-policies-export-modal.png)
+![Policies export modal — profile groups with filter pills and export button](guides/screenshots/g-08-policies-export-modal.png)
 
 *Figure 8 — Policies export modal: profiles grouped by type, filter pills at the top, Export button at the bottom showing the selected count.*
 
@@ -211,7 +211,7 @@ Four export formats are offered side-by-side:
 | **XLSX** | Excel spreadsheet | Data analysis, pivot tables |
 | **PDF** | PDF document | Printable, read-only deliverables |
 
-![Comprehensive Report page — four export format buttons](screenshots/g-09-combined-report.png)
+![Comprehensive Report page — four export format buttons](guides/screenshots/g-09-combined-report.png)
 
 *Figure 9 — Comprehensive Report page: choose your export format. All four formats use the same configuration modal.*
 
@@ -241,11 +241,11 @@ All four format buttons open the same export modal with two independent sections
 
 5. Click **Cancel** at any time to close without exporting.
 
-![Comprehensive report export modal — Health Checks section](screenshots/g-10-combined-export-modal.png)
+![Comprehensive report export modal — Health Checks section](guides/screenshots/g-10-combined-export-modal.png)
 
 *Figure 10 — Export modal (top): Health Checks section. Use the filter pills to seed the selection, then expand groups to adjust individual checks.*
 
-![Comprehensive report export modal scrolled — Policy Profiles section](screenshots/g-11-combined-export-modal-scrolled.png)
+![Comprehensive report export modal scrolled — Policy Profiles section](guides/screenshots/g-11-combined-export-modal-scrolled.png)
 
 *Figure 11 — Export modal (scrolled down): Policy Profiles section. Select which profiles to include alongside the health checks. The Export button at the bottom reflects the total selection.*
 
@@ -268,7 +268,7 @@ Open **Workspace → Settings** in the sidebar. The settings area has five tabs 
 1. Enter your API URL, API Key, and Auth ID.
 2. Click **Save**. The status indicator at the top of the tab shows **● Connected** (green) once credentials are accepted.
 
-![Settings — Cortex Platform Credentials tab (fields blurred)](screenshots/g-12-settings-credentials.png)
+![Settings — Cortex Platform Credentials tab (fields blurred)](guides/screenshots/g-12-settings-credentials.png)
 
 *Figure 12 — Credentials tab: enter your API URL, Key, and Auth ID, then Save. Sensitive fields are intentionally obscured in this guide.*
 
@@ -292,7 +292,7 @@ Click the **Report Details** tab in the Settings left panel. These fields popula
 
 Fill in the fields and click **Save**. The report date is populated automatically at generation time.
 
-![Settings — Report Details tab with seven metadata fields](screenshots/g-13-settings-report-details.png)
+![Settings — Report Details tab with seven metadata fields](guides/screenshots/g-13-settings-report-details.png)
 
 *Figure 13 — Report Details tab: fill in these fields once and every generated report will include your customer and consultant information.*
 
@@ -316,7 +316,7 @@ Separate baseline files for Extension Policy Rules, currently supporting **Windo
 2. Click inside the upload area or drag a `.export` file onto it.
 3. The baseline is saved immediately — no separate Save button is needed.
 
-![Settings — Policies & Profiles Baselines tab showing per-OS upload cards](screenshots/g-14-settings-baselines.png)
+![Settings — Policies & Profiles Baselines tab showing per-OS upload cards](guides/screenshots/g-14-settings-baselines.png)
 
 *Figure 14 — Baselines tab: one upload card per operating system. Each card includes the steps to export the file from Cortex XSIAM.*
 
@@ -328,7 +328,7 @@ Click the **Tests** tab. This is where you control which health checks run in fu
 
 The tab shows a summary badge at the top — e.g. **117 enabled** / **34 disabled** — so you can see your current configuration at a glance.
 
-![Settings — Tests tab showing test list with enable toggles and severity dropdowns](screenshots/g-15-settings-tests.png)
+![Settings — Tests tab showing test list with enable toggles and severity dropdowns](guides/screenshots/g-15-settings-tests.png)
 
 *Figure 15 — Tests tab: all 151 health checks listed by category, each with an enable toggle and a severity dropdown.*
 
@@ -354,7 +354,7 @@ Every check has a **severity dropdown** in its row. The default comes from the Y
 2. Click the **severity dropdown** in that row — options are `Critical`, `High`, `Medium`, `Low`, `Info`.
 3. Select the new severity level.
 
-![Settings — Tests table showing individual test rows with severity dropdowns and enable checkboxes](screenshots/g-16-settings-tests-severity.png)
+![Settings — Tests table showing individual test rows with severity dropdowns and enable checkboxes](guides/screenshots/g-16-settings-tests-severity.png)
 
 *Figure 16 — Individual test rows: each row shows the test name, its YAML slug, a severity dropdown, and an enable/disable toggle.*
 
