@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HealthDM — User Guide</title>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --surface: #12161f;
+      --surface2: #181d28;
+      --border: #2a3142;
+      --text: #e8ecf4;
+      --muted: #8b95a8;
+      --accent: #7c9cff;
+      --ok: #3dd68c;
+      --warn: #f5a524;
+      --danger: #f87171;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout ── */
+    .wrap { max-width: 960px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.75rem;
+      margin-bottom: 2.5rem;
+    }
+    header h1 { font-size: 1.85rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 0.4rem; }
+    header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--ok); border: 1px solid rgba(61,214,140,0.35);
+      padding: 0.2rem 0.55rem; border-radius: 6px; margin-top: 0.85rem;
+    }
+
+    /* ── TOC ── */
+    nav.toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.1rem 1.4rem 1.3rem;
+      margin-bottom: 3rem;
+    }
+    nav.toc strong { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.09em; }
+    nav.toc ol { margin: 0.8rem 0 0; padding-left: 1.25rem; columns: 2; column-gap: 2rem; }
+    nav.toc li { margin: 0.3rem 0; break-inside: avoid; }
+    @media (max-width: 600px) { nav.toc ol { columns: 1; } }
+
+    /* ── Sections & headings ── */
+    section { margin-bottom: 3.5rem; }
+    h2 {
+      font-size: 1.25rem; font-weight: 700;
+      margin: 0 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      scroll-margin-top: 1.5rem;
+    }
+    h3 {
+      font-size: 1rem; font-weight: 650;
+      color: #c5cee0; margin: 1.75rem 0 0.6rem;
+    }
+    h4 {
+      font-size: 0.9rem; font-weight: 600;
+      color: var(--muted); margin: 1.25rem 0 0.4rem;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    p { margin: 0.6rem 0; }
+    ul, ol { margin: 0.5rem 0 0.8rem; padding-left: 1.4rem; }
+    li { margin: 0.35rem 0; }
+
+    /* ── Inline code & kbd ── */
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.84em; background: #1a2030;
+      border: 1px solid var(--border); padding: 0.1rem 0.35rem; border-radius: 4px;
+    }
+    kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82em; background: #1a2030;
+      border: 1px solid var(--border); border-bottom-width: 2px;
+      padding: 0.12rem 0.4rem; border-radius: 4px;
+    }
+
+    /* ── Figures ── */
+    figure {
+      margin: 1.4rem 0 2rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #080a0e;
+    }
+    figure img {
+      display: block; width: 100%; height: auto;
+      max-width: 960px; margin: 0 auto; vertical-align: middle;
+    }
+    figcaption {
+      padding: 0.7rem 1rem 0.85rem;
+      font-size: 0.87rem; color: var(--muted);
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    figcaption strong { color: var(--text); }
+
+    /* ── Callouts ── */
+    .callout {
+      border-left: 3px solid var(--warn);
+      background: rgba(245,165,36,0.07);
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.92rem;
+    }
+    .callout.tip {
+      border-color: var(--accent);
+      background: rgba(124,156,255,0.07);
+    }
+    .callout.danger {
+      border-color: var(--danger);
+      background: rgba(248,113,113,0.07);
+    }
+    .callout p { margin: 0.3rem 0; }
+    .callout p:first-child { margin-top: 0; }
+    .callout p:last-child { margin-bottom: 0; }
+
+    /* ── Step list ── */
+    ol.steps { padding-left: 0; list-style: none; counter-reset: steps; }
+    ol.steps > li {
+      counter-increment: steps;
+      position: relative;
+      padding: 0.5rem 0 0.5rem 2.5rem;
+      margin: 0.6rem 0;
+    }
+    ol.steps > li::before {
+      content: counter(steps);
+      position: absolute; left: 0; top: 0.45rem;
+      width: 1.6rem; height: 1.6rem;
+      background: var(--accent); color: #0b0d12;
+      border-radius: 50%;
+      font-size: 0.78rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Small label pill ── */
+    .pill {
+      display: inline-block;
+      font-size: 0.75rem; font-weight: 600;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 0.15rem 0.5rem; border-radius: 999px;
+      color: var(--text); vertical-align: middle;
+    }
+    .pill.blue { background: rgba(124,156,255,0.12); border-color: rgba(124,156,255,0.35); color: var(--accent); }
+    .pill.green { background: rgba(61,214,140,0.1); border-color: rgba(61,214,140,0.35); color: var(--ok); }
+    .pill.orange { background: rgba(245,165,36,0.1); border-color: rgba(245,165,36,0.35); color: var(--warn); }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 0.75rem 0 1.25rem; }
+    th {
+      text-align: left; font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted); border-bottom: 1px solid var(--border);
+      padding: 0.55rem 0.75rem;
+    }
+    td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(42,49,66,0.5); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    @media print {
+      body { background: #fff; color: #111; }
+      a { color: #06c; }
+      figure { break-inside: avoid; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>HealthDM — User Guide</h1>
+    <p>SOC health diagnostics for Cortex Platform — run assessments, analyze policies, generate reports, and configure your workspace.</p>
+    <span class="badge">Open in browser at http://localhost:8800</span>
+  </header>
+
+  <!-- ══════════════════════════════════════
+       TABLE OF CONTENTS
+  ══════════════════════════════════════ -->
+  <nav class="toc" aria-label="Table of contents">
+    <strong>Contents</strong>
+    <ol>
+      <li><a href="#start">Getting started</a></li>
+      <li><a href="#layout">Navigation &amp; layout</a></li>
+      <li><a href="#cortex">Cortex Platform assessment</a></li>
+      <li><a href="#category">Drilling into a category</a></li>
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#policies">Policies &amp; Profiles</a></li>
+      <li><a href="#combined">Comprehensive report</a></li>
+      <li><a href="#settings-credentials">Settings — Credentials</a></li>
+      <li><a href="#settings-report">Settings — Report Details</a></li>
+      <li><a href="#settings-baselines">Settings — Baselines</a></li>
+      <li><a href="#settings-tests">Settings — Tests</a></li>
+      <li><a href="#theme">Theme switcher</a></li>
+    </ol>
+  </nav>
+
+
+  <!-- ══════════════════════════════════════
+       1. GETTING STARTED
+  ══════════════════════════════════════ -->
+  <section id="start">
+    <h2>1. Getting started</h2>
+    <p>
+      HealthDM runs entirely in your browser. Open <strong>http://localhost:8800</strong> (or the host/port your Docker stack maps to nginx).
+      The app redirects you straight to the <strong>Cortex Platform</strong> page on first load.
+    </p>
+    <div class="callout">
+      <p><strong>Before you run your first assessment</strong>, go to <a href="#settings-credentials">Settings → Cortex Platform Credentials</a> and enter your API URL, API Key, and Auth ID. Without these the health checks return no live data.</p>
+    </div>
+    <p>The five main areas of the app are:</p>
+    <table>
+      <thead><tr><th>Area</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Dashboard</strong></td><td>At-a-glance health score, top failures, and trends over time.</td></tr>
+        <tr><td><strong>Cortex Platform</strong></td><td>Run assessments, browse 14 check categories, filter and export results.</td></tr>
+        <tr><td><strong>Policies &amp; Profiles</strong></td><td>Import Cortex <code>.export</code> bundles and compare them against baselines.</td></tr>
+        <tr><td><strong>Comprehensive Report</strong></td><td>Export a combined health + policy document in HTML, DOCX, XLSX, or PDF.</td></tr>
+        <tr><td><strong>Settings</strong></td><td>Credentials, report metadata, baselines, and per-check test configuration.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       2. NAVIGATION & LAYOUT
+  ══════════════════════════════════════ -->
+  <section id="layout">
+    <h2>2. Navigation &amp; layout</h2>
+    <p>
+      A persistent <strong>left sidebar</strong> is always visible. It groups every section under labelled headings:
+      <em>Overview</em>, <em>Health Assessment</em>, <em>Analyze</em>, <em>Reports</em>, and <em>Workspace</em>.
+      The currently active page is highlighted.
+    </p>
+    <p>
+      The <strong>theme switcher</strong> lives at the very bottom of the sidebar — three buttons labelled
+      <span class="pill">Dark</span> <span class="pill">Light</span> <span class="pill">Mono</span>.
+      Use it at any time; the choice persists across page loads.
+    </p>
+    <figure>
+      <img src="screenshots/g-01-cortex-overview.png" alt="HealthDM main layout — sidebar and Cortex Platform overview" width="960" />
+      <figcaption><strong>Figure 1.</strong> Main layout — sidebar on the left, content area on the right. The active section is highlighted in the sidebar.</figcaption>
+    </figure>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       3. CORTEX PLATFORM ASSESSMENT
+  ══════════════════════════════════════ -->
+  <section id="cortex">
+    <h2>3. Cortex Platform assessment</h2>
+    <p>
+      The <strong>Cortex Platform</strong> page is the core of HealthDM. It runs 151 health checks across 14 categories and shows an overall health score at the top.
+    </p>
+
+    <h3>3.1 Running and refreshing an assessment</h3>
+    <p>The toolbar in the top-right of the page has two action buttons:</p>
+    <ul>
+      <li><span class="pill blue">Re-run</span> — queues a full new assessment run against your configured Cortex connection. The page updates when the run finishes.</li>
+      <li><span class="pill">Clean Up</span> — clears stale cached run data.</li>
+    </ul>
+    <div class="callout tip">
+      <p>Wait for the assessment to finish before exporting — the score and check counts update live as results come in. A running job is indicated in the UI progress area at the top of the page.</p>
+    </div>
+
+    <h3>3.2 Reading the health score</h3>
+    <p>
+      Below the toolbar you see the <strong>overall health score</strong> (e.g. 76%) alongside a breakdown:
+      <span class="pill green">Pass</span> <span class="pill orange">Fail</span> <span class="pill">Warn</span> <span class="pill">Error</span> <span class="pill">Completed</span>.
+      These counters reflect the current run across all 151 checks.
+    </p>
+
+    <h3>3.3 Filtering results</h3>
+    <p>
+      The <strong>Refine results</strong> panel lets you narrow which category tiles are shown. There are two independent rows of toggle buttons:
+    </p>
+    <ul>
+      <li><strong>Status</strong> — Pass, Fail, Warn, Completed, Done, Error, Skipped</li>
+      <li><strong>Severity</strong> — Critical, High, Medium, Low, Info</li>
+    </ul>
+    <p>
+      Click one or more buttons to activate them; the category tiles below update instantly to show only categories that contain matching checks.
+      Click <span class="pill">Clear all</span> to reset. Leaving all buttons unselected shows everything.
+    </p>
+    <figure>
+      <img src="screenshots/g-02-cortex-filters.png" alt="Cortex Platform — Fail filter active, filtered category tiles" width="960" />
+      <figcaption><strong>Figure 2.</strong> Filtering by <strong>Fail</strong> status — only categories that contain failed checks are shown. Combine status and severity filters to narrow further.</figcaption>
+    </figure>
+
+    <h3>3.4 Exporting results</h3>
+    <p>
+      Three export formats are available from the toolbar: <span class="pill blue">HTML</span> <span class="pill blue">PDF</span> <span class="pill blue">Excel</span>.
+      All three open the <strong>same selection modal</strong> — only the output format differs.
+    </p>
+
+    <ol class="steps">
+      <li>Click the format button (e.g. <strong>HTML</strong>) in the top toolbar. The export modal opens.</li>
+      <li>
+        Use the <strong>quick-filter pills</strong> at the top of the modal to seed your selection:
+        <ul>
+          <li><span class="pill">All</span> — selects every check (default)</li>
+          <li><span class="pill">With Findings</span> — selects checks that have any result data</li>
+          <li><span class="pill">Failed + Warning</span> — selects only failed and warned checks</li>
+          <li><span class="pill">Critical + High</span> — selects only critical and high severity checks</li>
+        </ul>
+      </li>
+      <li>
+        The checks are grouped by category (e.g. <em>Endpoints 25/25</em>). Click the <strong>▾ arrow</strong> to expand a group and see individual checks with their <strong>severity</strong>, <strong>status</strong>, and <strong>count</strong>.
+        Use the <span class="pill">Clear group</span> button to deselect an entire category at once.
+      </li>
+      <li>Tick or untick individual checkboxes to fine-tune the selection. The <strong>Export N</strong> button at the bottom shows how many checks are included.</li>
+      <li>Click <span class="pill blue">Export N</span> to download the file. Click <span class="pill">Cancel</span> to close without exporting.</li>
+    </ol>
+
+    <figure>
+      <img src="screenshots/g-03-cortex-export-modal.png" alt="Cortex export modal — check selection with filter pills and group expand" width="960" />
+      <figcaption><strong>Figure 3.</strong> Cortex export modal — use the filter pills to seed the selection, expand groups to adjust individual checks, then click <strong>Export N</strong> to download.</figcaption>
+    </figure>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       4. DRILLING INTO A CATEGORY
+  ══════════════════════════════════════ -->
+  <section id="category">
+    <h2>4. Drilling into a category</h2>
+    <p>
+      Click any <strong>category tile</strong> on the Cortex Platform page to open the category detail view. This shows every individual check in that category, with its own status and severity.
+    </p>
+    <figure>
+      <img src="screenshots/g-04-cortex-category.png" alt="Cortex category detail — check list with status, severity, and filters" width="960" />
+      <figcaption><strong>Figure 4.</strong> Category detail view — breadcrumb navigation at the top, check list below. Each row shows the check name, severity badge, and current status.</figcaption>
+    </figure>
+
+    <h3>What's on the category page</h3>
+    <ul>
+      <li><strong>Breadcrumb</strong> — <em>Insights → Cortex → Category Name</em>. Click <em>Cortex</em> to go back to the overview.</li>
+      <li><strong>Category snapshot</strong> — Pass / Fail / Warn counters for this category only.</li>
+      <li><strong>Refine results</strong> — same Status + Severity filter toggles as the overview, scoped to this category.</li>
+      <li><span class="pill blue">Download</span> — exports this category's checks only (same modal flow as the overview export).</li>
+      <li><span class="pill">Re-run Category</span> — re-runs only the checks in this category without triggering a full assessment.</li>
+    </ul>
+    <div class="callout tip">
+      <p>Use <strong>Re-run Category</strong> after fixing an issue to confirm it resolved without waiting for a full 151-check run.</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       5. DASHBOARD
+  ══════════════════════════════════════ -->
+  <section id="dashboard">
+    <h2>5. Dashboard</h2>
+    <p>
+      The <strong>Dashboard</strong> gives you an executive-level view that combines the Cortex health assessment results with Policies &amp; Profiles compliance in one place.
+      Use it for a quick status check before diving into details.
+    </p>
+
+    <h3>5.1 Overview tab</h3>
+    <p>The default tab shows:</p>
+    <ul>
+      <li><strong>Health score</strong> — current score (e.g. 76), letter grade, and stability label.</li>
+      <li><strong>Check distribution</strong> — Passed / Failed / Warnings / Completed totals.</li>
+      <li><strong>Top recommendations</strong> — the highest-priority failures from the latest run, sorted by criticality.</li>
+      <li><strong>Health Score %</strong> and <strong>Policy Score %</strong> — separate tiles for each dimension.</li>
+      <li><strong>Open Failures</strong> — combined count of health + policy failures.</li>
+      <li><strong>Critical Severity</strong> — count of critical-level findings across both health and policy.</li>
+    </ul>
+    <figure>
+      <img src="screenshots/g-05-dashboard-overview.png" alt="Dashboard Overview tab — score, check distribution, top recommendations" width="960" />
+      <figcaption><strong>Figure 5.</strong> Dashboard Overview tab — score summary, check distribution, and top recommendations at a glance.</figcaption>
+    </figure>
+
+    <h3>5.2 Trends tab</h3>
+    <p>
+      Click the <span class="pill">Trends</span> tab to switch to the historical view. This shows:
+    </p>
+    <ul>
+      <li><strong>Latest Score</strong> — score and timestamp of the most recent completed run.</li>
+      <li><strong>Score Change</strong> — point change compared to the previous run.</li>
+      <li><strong>Open Findings</strong> — current open findings count, with change since prior run.</li>
+      <li><strong>Regressions</strong> — checks that previously passed but now fail.</li>
+      <li><strong>Score History chart</strong> — line chart of the overall health score over time (x-axis = date, y-axis = 0–100%).</li>
+      <li><strong>Category Trends</strong> — per-category trend breakdown.</li>
+    </ul>
+    <figure>
+      <img src="screenshots/g-06-dashboard-trends.png" alt="Dashboard Trends tab — score history chart and category trends" width="960" />
+      <figcaption><strong>Figure 6.</strong> Dashboard Trends tab — score history over time and per-category trend breakdown.</figcaption>
+    </figure>
+
+    <p>Click <span class="pill blue">Refresh</span> (top-right of the Dashboard page) to reload the latest data at any time.</p>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       6. POLICIES & PROFILES
+  ══════════════════════════════════════ -->
+  <section id="policies">
+    <h2>6. Policies &amp; Profiles</h2>
+    <p>
+      The <strong>Policies &amp; Profiles</strong> page lets you import Cortex <code>.export</code> bundles (prevention policies and extension policy rules), compare them against your configured baselines, and generate policy-scoped reports.
+    </p>
+
+    <h3>6.1 Importing a policy bundle</h3>
+    <ol class="steps">
+      <li>Navigate to <strong>Analyze → Policies &amp; Profiles</strong> in the sidebar.</li>
+      <li>Drag and drop a Cortex <code>.export</code> file onto the import zone, or click inside it to open a file picker.</li>
+      <li>The app parses the bundle, stores it, and compares it against the configured baselines automatically.</li>
+      <li>The imported bundle appears in the list with its comparison score and per-rule status.</li>
+    </ol>
+    <figure>
+      <img src="screenshots/g-07-policies.png" alt="Policies &amp; Profiles page — import zone and bundle list" width="960" />
+      <figcaption><strong>Figure 7.</strong> Policies &amp; Profiles page — drag-and-drop import zone at the top, imported bundles listed below with scores and actions.</figcaption>
+    </figure>
+
+    <h3>6.2 Exporting a policy report</h3>
+    <p>
+      Three export formats are available from the toolbar: <span class="pill blue">HTML</span> <span class="pill blue">PDF</span> <span class="pill blue">Excel</span>.
+      The export modal lets you choose which <strong>profiles</strong> (not individual checks) to include.
+    </p>
+
+    <ol class="steps">
+      <li>Click the format button (e.g. <strong>HTML</strong>) in the toolbar. The export modal opens.</li>
+      <li>
+        Use the filter pills to seed your selection:
+        <span class="pill">Select all</span> / <span class="pill">Clear</span> / <span class="pill">All</span> / <span class="pill">With Findings</span> / <span class="pill">Failed + Warning</span> / <span class="pill">Critical + High</span>.
+      </li>
+      <li>
+        Profiles are grouped by type — <em>EXPLOIT</em>, <em>MALWARE</em>, <em>RESTRICTIONS</em>, <em>POLICY_RULE</em>, <em>AGENT_SETTINGS</em>, <em>EXCEPTIONS</em>.
+        Click <strong>▾</strong> to expand a group and see individual profiles with their severity and status.
+      </li>
+      <li>Tick or untick profiles as needed. The <strong>Export N</strong> button reflects the current selection count.</li>
+      <li>Click <span class="pill blue">Export N</span> to download.</li>
+    </ol>
+
+    <figure>
+      <img src="screenshots/g-08-policies-export-modal.png" alt="Policies export modal — profile groups with filter pills and export button" width="960" />
+      <figcaption><strong>Figure 8.</strong> Policies export modal — profiles grouped by type, filter pills at the top, Export button at the bottom showing the selected count.</figcaption>
+    </figure>
+
+    <div class="callout danger">
+      <p><strong>Delete All</strong> (toolbar, far right) removes every imported bundle permanently. Use with caution — there is no undo.</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       7. COMPREHENSIVE REPORT
+  ══════════════════════════════════════ -->
+  <section id="combined">
+    <h2>7. Comprehensive report</h2>
+    <p>
+      The <strong>Comprehensive Report</strong> page combines Cortex health-check results <em>and</em> policy/profile data into a single export. It is the most complete output HealthDM produces and is the recommended format for customer deliverables.
+    </p>
+    <p>Four export formats are offered side-by-side:</p>
+    <table>
+      <thead><tr><th>Button</th><th>Output</th><th>Best used for</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill blue">HTML</span></td><td>Interactive HTML file</td><td>Sharing via browser; clickable, searchable</td></tr>
+        <tr><td><span class="pill blue">DOCX</span></td><td>Word document</td><td>Editable deliverables, customer-facing reports</td></tr>
+        <tr><td><span class="pill blue">XLSX</span></td><td>Excel spreadsheet</td><td>Data analysis, pivot tables</td></tr>
+        <tr><td><span class="pill blue">PDF</span></td><td>PDF document</td><td>Printable, read-only deliverables</td></tr>
+      </tbody>
+    </table>
+
+    <figure>
+      <img src="screenshots/g-09-combined-report.png" alt="Comprehensive Report page — four export format buttons" width="960" />
+      <figcaption><strong>Figure 9.</strong> Comprehensive Report page — choose your export format. All four formats use the same configuration modal.</figcaption>
+    </figure>
+
+    <h3>7.1 How to export a comprehensive report</h3>
+    <p>All four format buttons open the same export modal with two independent sections — <strong>Health Checks</strong> and <strong>Policy Profiles</strong>. You configure each side separately.</p>
+
+    <ol class="steps">
+      <li>Click a format button — e.g. <span class="pill blue">HTML</span>. The export modal opens.</li>
+      <li>
+        <strong>Health Checks section (top half of modal):</strong><br/>
+        Use the filter pills to seed the selection:
+        <ul>
+          <li><span class="pill">Select all</span> — includes all 151 checks</li>
+          <li><span class="pill">Clear</span> — deselects everything</li>
+          <li><span class="pill">With Findings</span> — only checks that returned data</li>
+          <li><span class="pill">Failed + Warning</span> — only failed or warned checks</li>
+          <li><span class="pill">Critical + High</span> — only critical and high severity checks</li>
+        </ul>
+        Checks are grouped by category (e.g. <em>Endpoints 25/25</em>, <em>Security Events 27/27</em>). Click <strong>▾</strong> to expand and adjust individual checks. Use <span class="pill">Clear group</span> to deselect a whole category.
+      </li>
+      <li>
+        <strong>Policy Profiles section (bottom half of modal):</strong><br/>
+        Scroll down in the modal to reach the policy profiles. The same filter pills apply here.
+        Profiles are grouped as: <em>EXPLOIT</em>, <em>MALWARE</em>, <em>RESTRICTIONS</em>, <em>POLICY_RULE</em>, <em>AGENT_SETTINGS</em>, <em>EXCEPTIONS</em>.
+        Expand each group to include or exclude specific profiles.
+      </li>
+      <li>The <span class="pill blue">Export N</span> button at the bottom of the modal shows the combined selection count — click it to generate and download the file.</li>
+      <li>Click <span class="pill">Cancel</span> at any time to close without exporting.</li>
+    </ol>
+
+    <figure>
+      <img src="screenshots/g-10-combined-export-modal.png" alt="Comprehensive report export modal — Health Checks section with filter pills and groups" width="960" />
+      <figcaption><strong>Figure 10.</strong> Export modal (top) — Health Checks section. Use the filter pills to seed the selection, then expand groups to adjust individual checks.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="screenshots/g-11-combined-export-modal-scrolled.png" alt="Comprehensive report export modal scrolled — Policy Profiles section" width="960" />
+      <figcaption><strong>Figure 11.</strong> Export modal (scrolled down) — Policy Profiles section. Select which profiles to include alongside the health checks. The Export button at the bottom reflects the total selection.</figcaption>
+    </figure>
+
+    <div class="callout tip">
+      <p>For a focused executive report, use <span class="pill">Failed + Warning</span> on the Health Checks side and <span class="pill">With Findings</span> on the Policy Profiles side — this keeps the document concise and action-oriented.</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       8. SETTINGS — CREDENTIALS
+  ══════════════════════════════════════ -->
+  <section id="settings-credentials">
+    <h2>8. Settings — Cortex Platform Credentials</h2>
+    <p>
+      Open <strong>Workspace → Settings</strong> in the sidebar. The settings area has five tabs in a left panel.
+      <strong>Cortex Platform Credentials</strong> is the first tab and the one you need to fill in before anything else works.
+    </p>
+
+    <h3>Fields</h3>
+    <ul>
+      <li><strong>API URL</strong> — your Cortex XSIAM tenant base URL, e.g. <code>https://api-yourtenant.xdr.us.paloaltonetworks.com</code></li>
+      <li><strong>API Key</strong> — your Cortex API key. Leave blank to keep an existing saved key.</li>
+      <li><strong>Auth ID</strong> — the Auth ID associated with your API key. Leave blank to keep an existing saved value.</li>
+    </ul>
+
+    <ol class="steps">
+      <li>Enter your API URL, API Key, and Auth ID.</li>
+      <li>Click <span class="pill blue">Save</span>. The status indicator at the top of the tab shows <span class="pill green">● Connected</span> once credentials are accepted.</li>
+    </ol>
+
+    <figure>
+      <img src="screenshots/g-12-settings-credentials.png" alt="Settings — Cortex Platform Credentials tab (fields blurred)" width="960" />
+      <figcaption><strong>Figure 12.</strong> Credentials tab — enter your API URL, Key, and Auth ID, then Save. Sensitive fields are intentionally obscured in this guide.</figcaption>
+    </figure>
+
+    <div class="callout danger">
+      <p><strong>Reset Tenant Data</strong> (red button at the bottom of the tab) wipes all stored assessment data for the current tenant. This cannot be undone — only use it when starting fresh with a new tenant.</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       9. SETTINGS — REPORT DETAILS
+  ══════════════════════════════════════ -->
+  <section id="settings-report">
+    <h2>9. Settings — Report Details</h2>
+    <p>
+      Click the <strong>Report Details</strong> tab in the Settings left panel.
+      These fields populate the dynamic placeholders embedded in every generated report — customer name, consultant details, and tenant identifiers.
+      Fill them in once and they are reused across all export formats.
+    </p>
+
+    <h3>Fields</h3>
+    <table>
+      <thead><tr><th>Field</th><th>Placeholder in reports</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td>Customer Name</td><td><code>{CUSTOMER_NAME}</code></td><td>Acme Corp</td></tr>
+        <tr><td>Cortex Project ID</td><td><code>{CORTEX_PROJECT_ID}</code></td><td>PRJ-00123</td></tr>
+        <tr><td>Cortex ID</td><td><code>{CORTEX_ID}</code></td><td>tenant-id-here</td></tr>
+        <tr><td>Cortex URL</td><td><code>{CORTEX_URL}</code></td><td>https://your-tenant.xdr.eu…</td></tr>
+        <tr><td>Consultant Name</td><td><code>{CONSULTANT_NAME}</code></td><td>Jane Smith</td></tr>
+        <tr><td>Consultant Title</td><td><code>{CONSULTANT_TITLE}</code></td><td>Domain Consultant</td></tr>
+        <tr><td>Consultant Email</td><td><code>{CONSULTANT_EMAIL}</code></td><td>jane@example.com</td></tr>
+      </tbody>
+    </table>
+
+    <p>Fill in the fields and click <span class="pill blue">Save</span>. The report date is populated automatically at generation time.</p>
+
+    <figure>
+      <img src="screenshots/g-13-settings-report-details.png" alt="Settings — Report Details tab with seven metadata fields" width="960" />
+      <figcaption><strong>Figure 13.</strong> Report Details tab — fill in these fields once and every generated report will include your customer and consultant information.</figcaption>
+    </figure>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       10. SETTINGS — BASELINES
+  ══════════════════════════════════════ -->
+  <section id="settings-baselines">
+    <h2>10. Settings — Policies &amp; Profiles Baselines</h2>
+    <p>
+      Click the <strong>Policies &amp; Profiles Baselines</strong> tab. Baselines are the reference <code>.export</code> files that imported policy bundles are compared against. Upload one per operating system to override the built-in defaults.
+    </p>
+
+    <h3>Prevention Baselines</h3>
+    <p>
+      One baseline file per platform: <strong>Windows</strong>, <strong>macOS</strong>, <strong>Linux</strong>, <strong>Android</strong>, <strong>iOS/iPadOS</strong>.
+      Each card explains exactly how to obtain the file from Cortex XSIAM (<em>Endpoints → Policy Management → Profiles → Export</em>).
+    </p>
+
+    <h3>Extension Policy Baselines</h3>
+    <p>
+      Separate baseline files for Extension Policy Rules, currently supporting <strong>Windows</strong>.
+      The card shows whether you are using the combined built-in baseline or a custom upload.
+    </p>
+
+    <ol class="steps">
+      <li>Click the platform card you want to update (e.g. <em>Windows</em>).</li>
+      <li>Click inside the upload area or drag a <code>.export</code> file onto it.</li>
+      <li>The baseline is saved immediately — no separate Save button is needed.</li>
+    </ol>
+
+    <figure>
+      <img src="screenshots/g-14-settings-baselines.png" alt="Settings — Policies &amp; Profiles Baselines tab showing per-OS upload cards" width="960" />
+      <figcaption><strong>Figure 14.</strong> Baselines tab — one upload card per operating system. Each card includes the steps to export the file from Cortex XSIAM.</figcaption>
+    </figure>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       11. SETTINGS — TESTS
+  ══════════════════════════════════════ -->
+  <section id="settings-tests">
+    <h2>11. Settings — Tests</h2>
+    <p>
+      Click the <strong>Tests</strong> tab. This is where you control which health checks run in future assessments and what severity level each check uses.
+    </p>
+    <p>
+      The tab shows a summary badge at the top — e.g. <span class="pill green">117 enabled</span> <span class="pill">34 disabled</span> — so you can see your current configuration at a glance.
+    </p>
+
+    <figure>
+      <img src="screenshots/g-15-settings-tests.png" alt="Settings — Tests tab showing test list with enable toggles and severity dropdowns" width="960" />
+      <figcaption><strong>Figure 15.</strong> Tests tab — all 151 health checks listed by category, each with an enable toggle and a severity dropdown.</figcaption>
+    </figure>
+
+    <h3>11.1 Enabling and disabling tests</h3>
+    <p>You can enable or disable tests at three levels:</p>
+
+    <table>
+      <thead><tr><th>Level</th><th>How</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>All tests</strong></td>
+          <td>Click <span class="pill green">Enable all</span> or <span class="pill">Disable all</span> at the top of the page</td>
+          <td>Turns every check on or off in one click</td>
+        </tr>
+        <tr>
+          <td><strong>Category</strong></td>
+          <td>Click <span class="pill green">Enable category</span> or <span class="pill">Disable category</span> next to the category heading</td>
+          <td>Turns all checks in that group on or off</td>
+        </tr>
+        <tr>
+          <td><strong>Individual check</strong></td>
+          <td>Toggle the checkbox on the right side of any test row</td>
+          <td>Turns that single check on or off</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <p>Disabled checks are <strong>not deleted</strong> — they remain visible in results as <em>Skipped</em> and are simply not executed during the next run.</p>
+    </div>
+
+    <h3>11.2 Changing a test's severity</h3>
+    <p>
+      Every check has a <strong>severity dropdown</strong> in its row. The default comes from the YAML configuration, but you can override it here per-check.
+      Changing severity affects how the check is weighted in scores, how it appears in export filters (e.g. the <span class="pill">Critical + High</span> pill), and how it shows in results.
+    </p>
+
+    <ol class="steps">
+      <li>Find the check whose severity you want to change. You can scroll through the list or use your browser's <kbd>Ctrl</kbd>+<kbd>F</kbd> to search by name.</li>
+      <li>Click the <strong>severity dropdown</strong> in that row — options are <span class="pill orange">Critical</span>, <span class="pill">High</span>, <span class="pill">Medium</span>, <span class="pill">Low</span>, <span class="pill">Info</span>.</li>
+      <li>Select the new severity level.</li>
+    </ol>
+
+    <figure>
+      <img src="screenshots/g-16-settings-tests-severity.png" alt="Settings — Tests table showing individual test rows with severity dropdowns and enable checkboxes" width="960" />
+      <figcaption><strong>Figure 16.</strong> Individual test rows — each row shows the test name, its YAML slug, a severity dropdown, and an enable/disable toggle. Change severity or toggle a check here.</figcaption>
+    </figure>
+
+    <h3>11.3 Saving your changes</h3>
+    <p>
+      After making any combination of enable/disable changes or severity overrides, click <span class="pill blue">Save</span> at the top of the Tests tab.
+      Changes take effect on the <strong>next</strong> assessment run — they do not retroactively alter existing results.
+    </p>
+    <div class="callout tip">
+      <p>The test slug shown under each name (e.g. <code>agents_audit_quota_exceeded</code>) is the YAML identifier — useful for referencing checks in custom scripts or when asking for support.</p>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       12. THEME SWITCHER
+  ══════════════════════════════════════ -->
+  <section id="theme">
+    <h2>12. Theme switcher</h2>
+    <p>
+      The three theme buttons at the bottom of the sidebar — <span class="pill">Dark</span> <span class="pill">Light</span> <span class="pill">Mono</span> — change the app's colour scheme.
+      The selection persists across page navigation and browser reloads.
+      No restart is required; the change is instant.
+    </p>
+  </section>
+
+
+  <footer>
+    <p>HealthDM user guide · Screenshots captured from a live instance at http://localhost:8800 · Application routes and labels reflect the Next.js frontend under <code>frontend/app</code>; update this file if navigation changes.</p>
+  </footer>
+
+</div>
+</body>
+</html>

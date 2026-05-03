@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="600" viewBox="0 0 960 600">
+  <rect width="960" height="600" rx="12" fill="#0c0f14" stroke="#2a3142" stroke-width="2"/>
+  <rect x="16" y="16" width="928" height="36" rx="6" fill="#1a1f2e"/>
+  <text x="480" y="40" text-anchor="middle" fill="#e2e8f0" font-family="system-ui,sans-serif" font-size="13" font-weight="600">HealthDM - Dashboard</text>
+  <rect x="16" y="64" width="188" height="520" rx="8" fill="#141822" stroke="#2a3142"/>
+  <rect x="216" y="64" width="728" height="520" rx="8" fill="#12161f" stroke="#2a3142"/>
+  <text x="580" y="300" fill="#64748b" font-family="system-ui,sans-serif" font-size="12">Screenshot placeholder: health tiles, gauges, trends</text>
+</svg>
