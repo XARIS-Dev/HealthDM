@@ -15,7 +15,7 @@
 **Fetch and run the script**
 
 ```bash
-curl -fLO https://raw.githubusercontent.com/sam-platforms/HealthDM/main/Production/healthdm-prod-setup.sh
+curl -fLO https://raw.githubusercontent.com/XARIS-Dev/HealthDM/refs/heads/main/healthdm-prod-setup.sh
 chmod +x healthdm-prod-setup.sh
 ./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.0.0/healthdm-prod-v1.0.0.tar.gz
 ```
