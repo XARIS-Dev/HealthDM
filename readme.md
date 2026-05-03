@@ -17,7 +17,7 @@
 ```bash
 curl -fLO https://raw.githubusercontent.com/sam-platforms/HealthDM/main/Production/healthdm-prod-setup.sh
 chmod +x healthdm-prod-setup.sh
-./healthdm-prod-setup.sh --url <release-tarball-url>
+./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.0.0/healthdm-prod-v1.0.0.tar.gz
 ```
 
 Then open **http://localhost** . Add **Cortex XSIAM** credentials in the app **Settings** UI when you are ready.
