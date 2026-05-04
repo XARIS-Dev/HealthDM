@@ -29,7 +29,7 @@ chmod +x healthdm-prod-setup.sh
 ./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.1.2/healthdm-prod-v1.1.2-linux-amd64.tar.gz
 ```
 
-Then open **http://localhost:8800** . Add **Cortex XSIAM** credentials in the app **Settings** UI when you are ready.
+Then open **http://localhost:8800** . Add the API Keys & ID in the app **Settings** UI when you are ready.
 
 ---
 
