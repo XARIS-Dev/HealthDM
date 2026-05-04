@@ -17,16 +17,16 @@
 ### Apple Silicon / Linux ARM64:
 
 ```bash
-curl -fLO https://raw.githubusercontent.com/XARIS-Dev/HealthDM/refs/heads/main/healthdm-prod-setups.sh
+curl -fLO https://raw.githubusercontent.com/XARIS-Dev/HealthDM/refs/heads/main/healthdm-prod-setup.sh
 chmod +x healthdm-prod-setup.sh
-./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.1.1/healthdm-prod-v1.1.1-linux-arm64.tar.gz
+./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.1.2/healthdm-prod-v1.1.2-linux-arm64.tar.gz
 ```
 ### Intel/AMD (Linux or Windows WSL2):
 
 ```bash
-curl -fLO https://raw.githubusercontent.com/XARIS-Dev/HealthDM/refs/heads/main/healthdm-prod-setups.sh
+curl -fLO https://raw.githubusercontent.com/XARIS-Dev/HealthDM/refs/heads/main/healthdm-prod-setup.sh
 chmod +x healthdm-prod-setup.sh
-./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.1.1/healthdm-prod-v1.1.1-linux-amd64.tar.gz
+./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.1.2/healthdm-prod-v1.1.2-linux-amd64.tar.gz
 ```
 
 Then open **http://localhost:8800** . Add **Cortex XSIAM** credentials in the app **Settings** UI when you are ready.
