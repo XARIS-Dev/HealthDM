@@ -120,6 +120,9 @@ if [[ -z "$HEALTHDM_IMAGE_TAG" ]]; then
   _base="${_base#healthdm-prod-}"
   _base="${_base%.tar.gz}"
   _base="${_base%.tgz}"
+  # Strip platform slug suffix (e.g. -linux-amd64, -linux-arm64)
+  _base="${_base%-linux-amd64}"
+  _base="${_base%-linux-arm64}"
   HEALTHDM_IMAGE_TAG="$_base"
   echo "Image tag (auto-detected): ${HEALTHDM_IMAGE_TAG}"
 fi
@@ -359,7 +362,12 @@ fi
 
 # ─── Download or locate archive ───────────────────────────────────────────────
 
-DEFAULT_TAR_NAME="healthdm-prod-${HEALTHDM_IMAGE_TAG}.tar.gz"
+# Derive filename from the URL basename so the platform slug is preserved.
+if [[ "$DOWNLOAD" -eq 1 && -n "$RELEASE_TGZ_URL" ]]; then
+  DEFAULT_TAR_NAME="$(basename "$RELEASE_TGZ_URL")"
+else
+  DEFAULT_TAR_NAME="healthdm-prod-${HEALTHDM_IMAGE_TAG}.tar.gz"
+fi
 
 if [[ "$DOWNLOAD" -eq 1 ]]; then
   echo ""
@@ -370,10 +378,15 @@ if [[ "$DOWNLOAD" -eq 1 ]]; then
 fi
 
 if [[ -z "${TAR_PATH}" ]]; then
-  if [[ -f "${ROOT}/${DEFAULT_TAR_NAME}" ]]; then
-    TAR_PATH="${ROOT}/${DEFAULT_TAR_NAME}"
+  _plat_tar="${ROOT}/healthdm-prod-${HEALTHDM_IMAGE_TAG}-${_PLAT_SLUG}.tar.gz"
+  _generic_tar="${ROOT}/healthdm-prod-${HEALTHDM_IMAGE_TAG}.tar.gz"
+  if [[ -f "${_plat_tar}" ]]; then
+    TAR_PATH="${_plat_tar}"
+  elif [[ -f "${_generic_tar}" ]]; then
+    TAR_PATH="${_generic_tar}"
   else
     echo "No archive found. Pass a path or use --url." >&2
+    echo "Expected: ${_plat_tar} or ${_generic_tar}" >&2
     exit 1
   fi
 fi
