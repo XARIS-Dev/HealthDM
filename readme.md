@@ -19,14 +19,14 @@
 ```bash
 curl -fLO https://raw.githubusercontent.com/XARIS-Dev/HealthDM/refs/heads/main/healthdm-prod-setup.sh
 chmod +x healthdm-prod-setup.sh
-./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.1.3/healthdm-prod-v1.1.3-linux-arm64.tar.gz
+./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.1.4.1/healthdm-prod-v1.1.4-linux-arm64.tar.gz
 ```
 ### Intel/AMD (Linux or Windows WSL2):
 
 ```bash
 curl -fLO https://raw.githubusercontent.com/XARIS-Dev/HealthDM/refs/heads/main/healthdm-prod-setup.sh
 chmod +x healthdm-prod-setup.sh
-./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.1.3/healthdm-prod-v1.1.3-linux-amd64.tar.gz
+./healthdm-prod-setup.sh --url https://github.com/XARIS-Dev/HealthDM/releases/download/v1.1.4/healthdm-prod-v1.1.4-linux-amd64.tar.gz
 ```
 
 Then open **http://localhost:8800** . Add the API Keys & ID in the app **Settings** UI when you are ready.
