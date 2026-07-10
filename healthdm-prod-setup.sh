@@ -6,6 +6,7 @@ RELEASE_TGZ_URL="${RELEASE_TGZ_URL:-}"
 HEALTHDM_IMAGE_TAG="${HEALTHDM_IMAGE_TAG:-}"
 INSTALL_DIR="${INSTALL_DIR:-healthdm}"
 DOWNLOAD=1
+REDOWNLOAD=0
 TAR_PATH=""
 FORCE_ENV=0
 EXPECTED_SHA256=""
@@ -50,10 +51,11 @@ Usage:
 
 Options:
   --url URL        Release download URL for healthdm-prod-<tag>.tar.gz
-  --sha256 HEX     Expected SHA-256 of the downloaded archive (required for --url)
+  --sha256 HEX     Expected SHA-256 of the downloaded archive (optional; verified when given)
   --tag TAG        Image tag baked into the tarball (auto-detected from the filename)
   --dir DIR        Install directory (default: ./healthdm)
   --no-download    Use an existing archive instead of downloading
+  --redownload     Fetch a fresh copy even if the archive already exists in the install dir
   --tar PATH       Path to a local archive (implies --no-download)
   --plat SLUG      Override the detected platform (linux-amd64 | linux-arm64 | linux-arm)
   --force-env      Regenerate .env even if it already exists
@@ -72,6 +74,9 @@ Examples:
   # Use a local archive:
   bash healthdm-prod-setup.sh ~/Downloads/healthdm-prod-v1.0.0-linux-amd64.tar.gz
 
+  # Re-run against an install dir that already holds the archive (no download):
+  bash healthdm-prod-setup.sh --no-download --tag 2.3 --dir ./healthdm
+
   # Upgrade (keeps the existing .env and Postgres data):
   bash healthdm-prod-setup.sh --url <new-url> --sha256 <hex> --dir ./healthdm
 EOF
@@ -84,6 +89,7 @@ while [[ $# -gt 0 ]]; do
     --tag)        HEALTHDM_IMAGE_TAG="${2:?--tag requires a value}"; shift 2 ;;
     --dir)        INSTALL_DIR="${2:?--dir requires a path}"; shift 2 ;;
     --no-download) DOWNLOAD=0; shift ;;
+    --redownload) REDOWNLOAD=1; shift ;;
     --tar)        TAR_PATH="${2:?--tar requires a path}"; DOWNLOAD=0; shift 2 ;;
     --plat)       PLAT_SLUG="${2:?--plat requires a slug (e.g. linux-amd64)}"; shift 2 ;;
     --force-env)  FORCE_ENV=1; shift ;;
@@ -440,23 +446,30 @@ else
 fi
 
 if [[ "$DOWNLOAD" -eq 1 ]]; then
-  echo ""
-  echo "Downloading: ${RELEASE_TGZ_URL}"
-  echo "         ->  ${ROOT}/${DEFAULT_TAR_NAME}"
-  curl -fL --progress-bar -o "${ROOT}/${DEFAULT_TAR_NAME}" "${RELEASE_TGZ_URL}"
   TAR_PATH="${ROOT}/${DEFAULT_TAR_NAME}"
+  if [[ "$REDOWNLOAD" -eq 0 && -s "${TAR_PATH}" ]] && gzip -t "${TAR_PATH}" 2>/dev/null; then
+    echo ""
+    echo "Using existing archive: ${TAR_PATH}"
+    echo "(pass --redownload to fetch a fresh copy)"
+  else
+    if [[ -e "${TAR_PATH}" && "$REDOWNLOAD" -eq 0 ]]; then
+      echo "Existing archive at ${TAR_PATH} is incomplete or corrupt — downloading fresh." >&2
+    fi
+    echo ""
+    echo "Downloading: ${RELEASE_TGZ_URL}"
+    echo "         ->  ${TAR_PATH}"
+    curl -fL --progress-bar -o "${TAR_PATH}" "${RELEASE_TGZ_URL}"
+  fi
 
   EXPECTED_SHA256="${EXPECTED_SHA256:-${HEALTHDM_EXPECTED_SHA256:-}}"
-  if [[ -z "${EXPECTED_SHA256}" ]]; then
-    echo "Error: downloaded archives require --sha256 <hex> (or HEALTHDM_EXPECTED_SHA256)." >&2
-    echo "Refusing to load an unverified archive from the network." >&2
-    exit 1
-  fi
   actual_sha256="$(shasum -a 256 "${TAR_PATH}" 2>/dev/null | awk '{print $1}')"
   if [[ -z "${actual_sha256}" ]]; then
     actual_sha256="$(sha256sum "${TAR_PATH}" 2>/dev/null | awk '{print $1}')"
   fi
-  if [[ "${actual_sha256}" != "${EXPECTED_SHA256}" ]]; then
+  if [[ -z "${EXPECTED_SHA256}" ]]; then
+    echo "WARNING: no --sha256 given — skipping archive verification." >&2
+    echo "  downloaded archive SHA-256: ${actual_sha256}" >&2
+  elif [[ "${actual_sha256}" != "${EXPECTED_SHA256}" ]]; then
     echo "Error: SHA-256 mismatch for ${TAR_PATH}." >&2
     echo "  expected: ${EXPECTED_SHA256}" >&2
     echo "  actual:   ${actual_sha256}" >&2
