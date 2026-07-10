@@ -1,145 +1,125 @@
 #!/usr/bin/env bash
-# HealthDM — one-shot production setup.
-#
-# Generates nginx.conf, .env, and docker-compose.yml inline (single-file installer — curl only this script).
-# The ONLY thing downloaded from the internet is the Docker image archive (unless you use a local path).
-#
-# Usage:
-#   bash healthdm-prod-setup.sh --url <github-release-url>
-#   bash healthdm-prod-setup.sh /path/to/healthdm-prod-v1.0.0.tar.gz
-#
-# Requires: docker, docker compose, curl, gunzip (gzip), openssl
+
 set -euo pipefail
 
-# ─── RELEASE URL — update this line when publishing a new release ────────────
 RELEASE_TGZ_URL="${RELEASE_TGZ_URL:-}"
-# ─────────────────────────────────────────────────────────────────────────────
-
 HEALTHDM_IMAGE_TAG="${HEALTHDM_IMAGE_TAG:-}"
 INSTALL_DIR="${INSTALL_DIR:-healthdm}"
 DOWNLOAD=1
 TAR_PATH=""
 FORCE_ENV=0
+EXPECTED_SHA256=""
 
-# ─── Help ─────────────────────────────────────────────────────────────────────
+detect_plat_slug() {
+  if command -v docker >/dev/null 2>&1; then
+    local docker_arch
+    docker_arch="$(docker version --format '{{.Server.Arch}}' 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+    case "${docker_arch}" in
+      amd64|x86_64)     echo "linux-amd64"; return 0 ;;
+      arm64|aarch64)    echo "linux-arm64"; return 0 ;;
+      arm|armv7l|armhf) echo "linux-arm";   return 0 ;;
+    esac
+  fi
+  local uname_m uname_s
+  uname_m="$(uname -m 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+  uname_s="$(uname -s 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+  case "${uname_m}" in
+    x86_64|amd64)       echo "linux-amd64" ;;
+    aarch64|arm64)      echo "linux-arm64" ;;
+    armv7l|armv7|armhf) echo "linux-arm" ;;
+    *)
+      case "${uname_s}" in
+        darwin*) echo "linux-arm64" ;;
+        *)       echo "linux-amd64" ;;
+      esac
+      ;;
+  esac
+}
+
+PLAT_SLUG="${HEALTHDM_PLAT_SLUG:-$(detect_plat_slug)}"
 
 usage() {
   cat <<'EOF'
-HealthDM Production Setup
+HealthDM production installer
 
-Generates nginx, .env, and docker-compose.yml inline; downloads only the Docker image archive.
-
-Requires: only this script (plus Docker, curl when using --url, openssl, gunzip).
+Generates docker-compose.yml, nginx.conf, and .env inline; downloads only the
+Docker image archive.
 
 Usage:
   bash healthdm-prod-setup.sh [OPTIONS] [PATH_TO_TAR_GZ]
 
 Options:
-  --url URL        GitHub Release download URL for healthdm-prod-<tag>.tar.gz
-  --tag TAG        Image tag baked into the tarball (auto-detected from filename if omitted)
-  --dir DIR        Installation directory (default: ./healthdm)
-  --no-download    Skip download; use existing archive (pass path or --tar)
+  --url URL        Release download URL for healthdm-prod-<tag>.tar.gz
+  --sha256 HEX     Expected SHA-256 of the downloaded archive (required for --url)
+  --tag TAG        Image tag baked into the tarball (auto-detected from the filename)
+  --dir DIR        Install directory (default: ./healthdm)
+  --no-download    Use an existing archive instead of downloading
   --tar PATH       Path to a local archive (implies --no-download)
+  --plat SLUG      Override the detected platform (linux-amd64 | linux-arm64 | linux-arm)
   --force-env      Regenerate .env even if it already exists
   -h, --help       Show this help
 
-Environment variables (alternative to flags):
-  RELEASE_TGZ_URL       Full download URL
-  HEALTHDM_IMAGE_TAG    Image tag
-  INSTALL_DIR           Installation directory
+Environment variables (alternatives to flags):
+  RELEASE_TGZ_URL, HEALTHDM_IMAGE_TAG, INSTALL_DIR, HEALTHDM_PLAT_SLUG,
+  HEALTHDM_EXPECTED_SHA256, PRODUCTION_HTTP_PORT, PRODUCTION_HTTP_BIND
 
 Examples:
-  # First install from GitHub release:
-  bash healthdm-prod-setup.sh --url https://github.com/org/repo/releases/download/v1.0.0/healthdm-prod-v1.0.0.tar.gz
+  # First install from a release:
+  bash healthdm-prod-setup.sh \
+    --url https://github.com/sam-r00t/HealthDM/releases/download/v1.0.0/healthdm-prod-v1.0.0-linux-amd64.tar.gz \
+    --sha256 <hex>
 
   # Use a local archive:
-  bash healthdm-prod-setup.sh ~/Downloads/healthdm-prod-v1.0.0.tar.gz
+  bash healthdm-prod-setup.sh ~/Downloads/healthdm-prod-v1.0.0-linux-amd64.tar.gz
 
-  # Upgrade to a new release (keeps existing .env and Postgres data):
-  bash healthdm-prod-setup.sh --url <new-url> --dir ./healthdm
+  # Upgrade (keeps the existing .env and Postgres data):
+  bash healthdm-prod-setup.sh --url <new-url> --sha256 <hex> --dir ./healthdm
 EOF
 }
 
-# ─── Argument parsing ─────────────────────────────────────────────────────────
-
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --url)
-      RELEASE_TGZ_URL="${2:?--url requires a URL}"
-      shift 2
-      ;;
-    --tag)
-      HEALTHDM_IMAGE_TAG="${2:?--tag requires a value}"
-      shift 2
-      ;;
-    --dir)
-      INSTALL_DIR="${2:?--dir requires a path}"
-      shift 2
-      ;;
-    --no-download)
-      DOWNLOAD=0
-      shift
-      ;;
-    --tar)
-      TAR_PATH="${2:?--tar requires a path}"
-      DOWNLOAD=0
-      shift 2
-      ;;
-    --force-env)
-      FORCE_ENV=1
-      shift
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    -*)
-      echo "Unknown option: $1" >&2
-      usage >&2
-      exit 1
-      ;;
-    *)
-      TAR_PATH="$1"
-      DOWNLOAD=0
-      shift
-      ;;
+    --url)        RELEASE_TGZ_URL="${2:?--url requires a URL}"; shift 2 ;;
+    --sha256)     EXPECTED_SHA256="${2:?--sha256 requires a hex digest}"; shift 2 ;;
+    --tag)        HEALTHDM_IMAGE_TAG="${2:?--tag requires a value}"; shift 2 ;;
+    --dir)        INSTALL_DIR="${2:?--dir requires a path}"; shift 2 ;;
+    --no-download) DOWNLOAD=0; shift ;;
+    --tar)        TAR_PATH="${2:?--tar requires a path}"; DOWNLOAD=0; shift 2 ;;
+    --plat)       PLAT_SLUG="${2:?--plat requires a slug (e.g. linux-amd64)}"; shift 2 ;;
+    --force-env)  FORCE_ENV=1; shift ;;
+    -h|--help)    usage; exit 0 ;;
+    -*)           echo "Unknown option: $1" >&2; usage >&2; exit 1 ;;
+    *)            TAR_PATH="$1"; DOWNLOAD=0; shift ;;
   esac
 done
 
-# ─── Resolve image tag ────────────────────────────────────────────────────────
-
 if [[ "$DOWNLOAD" -eq 1 && -z "$RELEASE_TGZ_URL" && -z "$TAR_PATH" ]]; then
-  echo "Error: provide --url <url> or a local archive path." >&2
-  echo "Run with --help for usage." >&2
+  echo "Error: provide --url <url> or a local archive path. See --help." >&2
   exit 1
 fi
 
 if [[ -z "$HEALTHDM_IMAGE_TAG" ]]; then
-  _src="${RELEASE_TGZ_URL:-$TAR_PATH}"
-  _base="$(basename "$_src")"
-  _base="${_base#healthdm-prod-}"
-  _base="${_base%.tar.gz}"
-  _base="${_base%.tgz}"
-  # Strip platform slug suffix (e.g. -linux-amd64, -linux-arm64)
-  _base="${_base%-linux-amd64}"
-  _base="${_base%-linux-arm64}"
-  HEALTHDM_IMAGE_TAG="$_base"
+  src="${RELEASE_TGZ_URL:-$TAR_PATH}"
+  base="$(basename "$src")"
+  base="${base#healthdm-prod-}"
+  base="${base%.tar.gz}"
+  base="${base%.tgz}"
+  base="${base%-linux-amd64}"
+  base="${base%-linux-arm64}"
+  base="${base%-linux-arm}"
+  HEALTHDM_IMAGE_TAG="$base"
   echo "Image tag (auto-detected): ${HEALTHDM_IMAGE_TAG}"
 fi
 
 if [[ -z "$HEALTHDM_IMAGE_TAG" ]]; then
-  echo "Error: could not determine image tag. Use --tag or name your archive healthdm-prod-<tag>.tar.gz" >&2
+  echo "Error: could not determine the image tag. Use --tag, or name the archive healthdm-prod-<tag>.tar.gz." >&2
   exit 1
 fi
 
-# ─── Create installation directory ───────────────────────────────────────────
-
 mkdir -p "${INSTALL_DIR}"
 ROOT="$(cd "${INSTALL_DIR}" && pwd)"
-echo "Installation directory: ${ROOT}"
+echo "Install directory: ${ROOT}"
 mkdir -p "${ROOT}/nginx" "${ROOT}/settings" "${ROOT}/reports"
-
-# ─── Generate docker-compose.yml ─────────────────────────────────────────────
 
 write_compose() {
   local root="$1"
@@ -186,6 +166,12 @@ services:
       - ./reports:/app/reports
       - runtime_state:/app/.runtime-state
       - /etc/machine-id:/etc/machine-id:ro
+      # The Docker socket is intentionally NOT mounted. Even a read-only mount
+      # lets a container caller list and inspect every other container on the
+      # host. Operators who want the System Health page's live container stats
+      # can opt in by re-adding the line below; the feature degrades gracefully
+      # without it.
+      #   - /var/run/docker.sock:/var/run/docker.sock:ro
 
   worker:
     image: healthdm-api:${TAG}
@@ -222,7 +208,11 @@ services:
     image: nginx:1.25-alpine
     restart: unless-stopped
     ports:
-      - "${PRODUCTION_HTTP_PORT:-8800}:80"
+      # Bind to loopback by default — the app has no built-in user auth and is
+      # intended for trusted-local use. To expose it externally you MUST set
+      # PRODUCTION_HTTP_BIND=0.0.0.0 *and* front the stack with TLS plus an
+      # external authentication layer.
+      - "${PRODUCTION_HTTP_BIND:-127.0.0.1}:${PRODUCTION_HTTP_PORT:-8800}:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
@@ -233,10 +223,8 @@ volumes:
   postgres_data:
   runtime_state:
 COMPOSE
-  echo "Generated ${root}/docker-compose.yml"
+  echo "Wrote ${root}/docker-compose.yml"
 }
-
-# ─── Generate nginx/nginx.conf ────────────────────────────────────────────────
 
 write_nginx_conf() {
   local root="$1"
@@ -250,22 +238,57 @@ http {
 
     server {
         listen 80;
-        client_max_body_size 50m;
+        # Global upload cap to protect against upload-DoS. The backup-restore
+        # route raises this in its own location block.
+        client_max_body_size 25m;
+        # Combined-report downloads encode every selected check_id + profile as
+        # query params; the URL can reach 30-60 KB on a full export, which the
+        # default 8 KB request-line buffer would reject with a 414.
+        large_client_header_buffers 8 64k;
 
-        location /api/ {
-            set $upstream_api api:8000;
-            proxy_pass http://$upstream_api;
+        location = /api/v1/system/backup/import {
+            client_max_body_size 2048m;
+            set $upstream_frontend frontend:3000;
+            proxy_pass http://$upstream_frontend;
             proxy_http_version 1.1;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # SSE support
+            proxy_request_buffering off;
+            proxy_read_timeout 24h;
+            proxy_send_timeout 24h;
+        }
+
+        location /api/ {
+            # Route /api/ through the Next.js container so the frontend's proxy
+            # signs every request before it reaches FastAPI. Bypassing this
+            # layer would either hard-401 the stack (when the internal-token
+            # requirement is on) or expose every privileged endpoint with no
+            # auth (if the operator disabled it to make a bypass work).
+            set $upstream_frontend frontend:3000;
+            proxy_pass http://$upstream_frontend;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            # Scrub the internal signing headers off the inbound request so a
+            # client can't pre-supply their own.
+            proxy_set_header X-HealthDM-Internal-Token "";
+            proxy_set_header X-HealthDM-Internal-Timestamp "";
+            proxy_set_header X-HealthDM-Internal-Nonce "";
+            proxy_set_header X-HealthDM-Internal-Path "";
+            # SSE support for the assessment progress stream.
             proxy_buffering off;
             proxy_cache off;
             proxy_set_header Connection '';
             chunked_transfer_encoding off;
             proxy_read_timeout 24h;
+            # Stream large bodies straight through (backup restore) without
+            # buffering the whole archive to a temp file first.
+            proxy_request_buffering off;
+            proxy_send_timeout 24h;
         }
 
         location /_next/webpack-hmr {
@@ -287,23 +310,23 @@ http {
     }
 }
 NGINX
-  echo "Generated ${root}/nginx/nginx.conf"
+  echo "Wrote ${root}/nginx/nginx.conf"
 }
-
-# ─── Generate .env ────────────────────────────────────────────────────────────
 
 write_env() {
   local root="$1"
   local image_tag="$2"
   local http_port="${PRODUCTION_HTTP_PORT:-8800}"
-  local db_pw secret salt
+  local db_pw secret salt internal_token
   db_pw="$(openssl rand -hex 24)"
   secret="$(openssl rand -hex 32)"
   salt="$(openssl rand -hex 16)"
-  umask 077
-  cat > "${root}/.env" <<EOF
-# Auto-generated by healthdm-prod-setup.sh — do not commit
-# TAG / PRODUCTION_HTTP_PORT: used by docker-compose.yml interpolation (any compose command from this dir).
+  internal_token="$(openssl rand -hex 32)"
+  (
+    umask 077
+    cat > "${root}/.env" <<EOF
+# Auto-generated by healthdm-prod-setup.sh — do not commit.
+# TAG / PRODUCTION_HTTP_PORT feed docker-compose.yml interpolation.
 TAG=${image_tag}
 PRODUCTION_HTTP_PORT=${http_port}
 POSTGRES_USER=healthdm
@@ -324,45 +347,92 @@ CELERY_RESULT_BACKEND=redis://redis:6379/0
 
 SECRET_KEY=${secret}
 ENCRYPTION_SALT=${salt}
-SETTINGS_FILE=/app/settings/healthdm-settings.json
+HEALTHDM_REQUIRE_SECRET_KEY=true
+HEALTHDM_INTERNAL_API_TOKEN=${internal_token}
+HEALTHDM_REQUIRE_INTERNAL_API_TOKEN=true
 REPORTS_TEMPLATE_DIR=/app/reports/templates
 LOG_LEVEL=INFO
 
-XSIAM_API_URL=
-XSIAM_API_KEY=
-XSIAM_AUTH_ID=1
+# Cortex Platform credentials are per-tenant — set them in the UI under
+# Tenants -> <slug> -> Credentials. There are no global XSIAM_* defaults.
 
 NEXT_PUBLIC_API_URL=http://localhost/api/v1
 EOF
-  umask 022
-  echo "Generated ${root}/.env with random secrets."
+    chmod 0600 "${root}/.env"
+  )
+  echo "Wrote ${root}/.env with fresh random secrets."
 }
-
-# ─── Write all config files ───────────────────────────────────────────────────
 
 write_compose    "${ROOT}"
 write_nginx_conf "${ROOT}"
 
 if [[ -f "${ROOT}/.env" && "${FORCE_ENV}" -eq 0 ]]; then
-  echo "Keeping existing ${ROOT}/.env  (use --force-env to regenerate)"
+  echo "Keeping existing ${ROOT}/.env (use --force-env to regenerate)."
 else
   if [[ -f "${ROOT}/.env" && "${FORCE_ENV}" -eq 1 ]]; then
-    echo "Regenerating .env (--force-env). If Postgres is already initialized, also run: docker compose down -v"
+    echo "Regenerating .env. If Postgres is already initialized, also run: docker compose down -v"
   fi
   write_env "${ROOT}" "${HEALTHDM_IMAGE_TAG}"
 fi
 
-# Keep TAG= in .env aligned with this run's archive (safe when preserving secrets on upgrade).
 if [[ -f "${ROOT}/.env" ]]; then
-  _env_new="${ROOT}/.env.tag.$$"
-  grep -v '^TAG=' "${ROOT}/.env" > "${_env_new}" || true
-  printf 'TAG=%s\n' "${HEALTHDM_IMAGE_TAG}" >> "${_env_new}"
-  mv "${_env_new}" "${ROOT}/.env"
+  env_new="${ROOT}/.env.tag.$$"
+  (
+    umask 077
+    : > "${env_new}"
+    chmod 0600 "${env_new}"
+    grep -v '^TAG=' "${ROOT}/.env" > "${env_new}" || true
+    printf 'TAG=%s\n' "${HEALTHDM_IMAGE_TAG}" >> "${env_new}"
+  )
+  if command -v install >/dev/null 2>&1; then
+    install -m 600 "${env_new}" "${ROOT}/.env"
+    rm -f "${env_new}"
+  else
+    mv "${env_new}" "${ROOT}/.env"
+    chmod 0600 "${ROOT}/.env"
+  fi
 fi
 
-# ─── Download or locate archive ───────────────────────────────────────────────
+ensure_env_secret() {
+  local key="$1"
+  local current tmp value
+  current="$(grep -E "^${key}=" "${ROOT}/.env" | tail -1 | cut -d= -f2- | tr -d '[:space:]')"
+  case "${current}" in
+    ""|replace_with_python_secrets_token_urlsafe_48) ;;
+    *) return 0 ;;
+  esac
+  value="$(openssl rand -hex 32)"
+  tmp="${ROOT}/.env.${key}.$$"
+  (
+    umask 077
+    : > "${tmp}"
+    chmod 0600 "${tmp}"
+    grep -vE "^${key}=" "${ROOT}/.env" > "${tmp}" || true
+    printf '%s=%s\n' "${key}" "${value}" >> "${tmp}"
+  )
+  if command -v install >/dev/null 2>&1; then
+    install -m 600 "${tmp}" "${ROOT}/.env"
+    rm -f "${tmp}"
+  else
+    mv "${tmp}" "${ROOT}/.env"
+    chmod 0600 "${ROOT}/.env"
+  fi
+  echo "Set ${key} in ${ROOT}/.env (was missing or placeholder)."
+}
 
-# Derive filename from the URL basename so the platform slug is preserved.
+ensure_env_flag_true() {
+  local key="$1"
+  if ! grep -qE "^${key}=" "${ROOT}/.env"; then
+    printf '%s=true\n' "${key}" >> "${ROOT}/.env"
+    echo "Set ${key}=true in ${ROOT}/.env (was missing)."
+  fi
+}
+
+if [[ -f "${ROOT}/.env" ]]; then
+  ensure_env_secret "HEALTHDM_INTERNAL_API_TOKEN"
+  ensure_env_flag_true "HEALTHDM_REQUIRE_INTERNAL_API_TOKEN"
+fi
+
 if [[ "$DOWNLOAD" -eq 1 && -n "$RELEASE_TGZ_URL" ]]; then
   DEFAULT_TAR_NAME="$(basename "$RELEASE_TGZ_URL")"
 else
@@ -375,30 +445,52 @@ if [[ "$DOWNLOAD" -eq 1 ]]; then
   echo "         ->  ${ROOT}/${DEFAULT_TAR_NAME}"
   curl -fL --progress-bar -o "${ROOT}/${DEFAULT_TAR_NAME}" "${RELEASE_TGZ_URL}"
   TAR_PATH="${ROOT}/${DEFAULT_TAR_NAME}"
-fi
 
-if [[ -z "${TAR_PATH}" ]]; then
-  _plat_tar="${ROOT}/healthdm-prod-${HEALTHDM_IMAGE_TAG}-${_PLAT_SLUG}.tar.gz"
-  _generic_tar="${ROOT}/healthdm-prod-${HEALTHDM_IMAGE_TAG}.tar.gz"
-  if [[ -f "${_plat_tar}" ]]; then
-    TAR_PATH="${_plat_tar}"
-  elif [[ -f "${_generic_tar}" ]]; then
-    TAR_PATH="${_generic_tar}"
-  else
-    echo "No archive found. Pass a path or use --url." >&2
-    echo "Expected: ${_plat_tar} or ${_generic_tar}" >&2
+  EXPECTED_SHA256="${EXPECTED_SHA256:-${HEALTHDM_EXPECTED_SHA256:-}}"
+  if [[ -z "${EXPECTED_SHA256}" ]]; then
+    echo "Error: downloaded archives require --sha256 <hex> (or HEALTHDM_EXPECTED_SHA256)." >&2
+    echo "Refusing to load an unverified archive from the network." >&2
+    exit 1
+  fi
+  actual_sha256="$(shasum -a 256 "${TAR_PATH}" 2>/dev/null | awk '{print $1}')"
+  if [[ -z "${actual_sha256}" ]]; then
+    actual_sha256="$(sha256sum "${TAR_PATH}" 2>/dev/null | awk '{print $1}')"
+  fi
+  if [[ "${actual_sha256}" != "${EXPECTED_SHA256}" ]]; then
+    echo "Error: SHA-256 mismatch for ${TAR_PATH}." >&2
+    echo "  expected: ${EXPECTED_SHA256}" >&2
+    echo "  actual:   ${actual_sha256}" >&2
     exit 1
   fi
 fi
 
-# Resolve to absolute path
+if [[ -z "${TAR_PATH}" ]]; then
+  plat_tar="${ROOT}/healthdm-prod-${HEALTHDM_IMAGE_TAG}-${PLAT_SLUG}.tar.gz"
+  generic_tar="${ROOT}/healthdm-prod-${HEALTHDM_IMAGE_TAG}.tar.gz"
+  if [[ -f "${plat_tar}" ]]; then
+    TAR_PATH="${plat_tar}"
+  elif [[ -f "${generic_tar}" ]]; then
+    TAR_PATH="${generic_tar}"
+  else
+    echo "No archive found. Pass a path or use --url." >&2
+    echo "Expected: ${plat_tar} or ${generic_tar}" >&2
+    exit 1
+  fi
+fi
+
 if [[ "${TAR_PATH}" != /* ]]; then
   TAR_PATH="$(cd "$(dirname "${TAR_PATH}")" && pwd)/$(basename "${TAR_PATH}")"
 fi
-
 [[ -f "${TAR_PATH}" ]] || { echo "File not found: ${TAR_PATH}" >&2; exit 1; }
 
-# ─── Load Docker images ───────────────────────────────────────────────────────
+tar_base="$(basename "${TAR_PATH}")"
+for expected in linux-amd64 linux-arm64 linux-arm; do
+  if [[ "${tar_base}" == *"-${expected}.tar.gz" && "${PLAT_SLUG}" != "${expected}" ]]; then
+    echo "Error: archive is ${expected} but this host detected ${PLAT_SLUG}." >&2
+    echo "Use the matching *-${PLAT_SLUG}.tar.gz archive, or pass --plat ${expected}." >&2
+    exit 1
+  fi
+done
 
 echo ""
 echo "Loading Docker images from: ${TAR_PATH}"
@@ -408,8 +500,6 @@ case "${TAR_PATH}" in
   *)              echo "Expected .tar.gz, .tgz, or .tar — got: ${TAR_PATH}" >&2; exit 1 ;;
 esac
 
-# ─── Start stack ──────────────────────────────────────────────────────────────
-
 echo ""
 echo "Starting stack (TAG=${HEALTHDM_IMAGE_TAG})..."
 cd "${ROOT}"
@@ -417,6 +507,6 @@ TAG="${HEALTHDM_IMAGE_TAG}" docker compose up -d
 
 echo ""
 echo "Done."
-echo "  App:      http://localhost:${PRODUCTION_HTTP_PORT:-8800}"
-echo "  Stop:     cd ${ROOT} && docker compose down"
-echo "  Logs:     cd ${ROOT} && docker compose logs -f"
+echo "  App:   http://localhost:${PRODUCTION_HTTP_PORT:-8800}"
+echo "  Stop:  cd ${ROOT} && docker compose down"
+echo "  Logs:  cd ${ROOT} && docker compose logs -f"
