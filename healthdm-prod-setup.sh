@@ -262,7 +262,8 @@ http {
             set $upstream_frontend frontend:3000;
             proxy_pass http://$upstream_frontend;
             proxy_http_version 1.1;
-            proxy_set_header Host $host;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Host $http_host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
@@ -280,7 +281,8 @@ http {
             set $upstream_frontend frontend:3000;
             proxy_pass http://$upstream_frontend;
             proxy_http_version 1.1;
-            proxy_set_header Host $host;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Host $http_host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
@@ -316,7 +318,8 @@ http {
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
-            proxy_set_header Host $host;
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Forwarded-Host $http_host;
         }
     }
 }
@@ -522,6 +525,7 @@ echo ""
 echo "Starting stack (TAG=${HEALTHDM_IMAGE_TAG})..."
 cd "${ROOT}"
 TAG="${HEALTHDM_IMAGE_TAG}" docker compose up -d
+TAG="${HEALTHDM_IMAGE_TAG}" docker compose restart nginx >/dev/null 2>&1 || true
 
 reconcile_db_password() {
   local db_password db_user db_name ready=0 i
