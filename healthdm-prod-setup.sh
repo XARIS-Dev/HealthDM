@@ -537,14 +537,15 @@ reconcile_db_password() {
     echo "WARNING: Postgres did not become ready within 120s; skipped password reconciliation." >&2
     return 0
   fi
-  if TAG="${HEALTHDM_IMAGE_TAG}" docker compose exec -T -e PGPASSWORD="${db_password}" postgres \
-      psql -h 127.0.0.1 -U "${db_user}" -d "${db_name}" -tAc 'select 1' >/dev/null 2>&1; then
+  if TAG="${HEALTHDM_IMAGE_TAG}" docker compose run --rm --no-deps -T \
+      -e PGPASSWORD="${db_password}" --entrypoint psql postgres \
+      -h postgres -U "${db_user}" -d "${db_name}" -tAc 'select 1' >/dev/null 2>&1; then
     return 0
   fi
   echo "Postgres volume password differs from .env — resetting user '${db_user}' to the .env value."
-  if TAG="${HEALTHDM_IMAGE_TAG}" docker compose exec -T postgres \
-      psql -U "${db_user}" -d "${db_name}" -v ON_ERROR_STOP=1 -v pw="${db_password}" \
-      -c "ALTER USER ${db_user} WITH PASSWORD :'pw';" >/dev/null; then
+  if echo "ALTER USER ${db_user} WITH PASSWORD :'pw';" | \
+      TAG="${HEALTHDM_IMAGE_TAG}" docker compose exec -T postgres \
+      psql -U "${db_user}" -d "${db_name}" -v ON_ERROR_STOP=1 -v pw="${db_password}" -f - >/dev/null; then
     TAG="${HEALTHDM_IMAGE_TAG}" docker compose restart api worker beat >/dev/null 2>&1 || true
     echo "Database password reconciled with .env; api/worker/beat restarted."
   else
