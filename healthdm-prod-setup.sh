@@ -209,6 +209,11 @@ services:
   frontend:
     image: healthdm-frontend:${TAG}
     restart: unless-stopped
+    environment:
+      API_INTERNAL_URL: http://api:8000
+      HEALTHDM_INTERNAL_API_TOKEN: ${HEALTHDM_INTERNAL_API_TOKEN}
+    depends_on:
+      - api
 
   nginx:
     image: nginx:1.25-alpine
