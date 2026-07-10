@@ -518,6 +518,43 @@ echo "Starting stack (TAG=${HEALTHDM_IMAGE_TAG})..."
 cd "${ROOT}"
 TAG="${HEALTHDM_IMAGE_TAG}" docker compose up -d
 
+reconcile_db_password() {
+  local db_password db_user db_name ready=0 i
+  db_password="$(grep -E '^DB_PASSWORD=' .env | tail -1 | cut -d= -f2-)"
+  db_user="$(grep -E '^DB_USER=' .env | tail -1 | cut -d= -f2-)"
+  db_name="$(grep -E '^DB_NAME=' .env | tail -1 | cut -d= -f2-)"
+  db_user="${db_user:-healthdm}"
+  db_name="${db_name:-healthdm}"
+  [[ -n "${db_password}" ]] || return 0
+  for i in $(seq 1 60); do
+    if TAG="${HEALTHDM_IMAGE_TAG}" docker compose exec -T postgres pg_isready -U "${db_user}" -d "${db_name}" >/dev/null 2>&1; then
+      ready=1
+      break
+    fi
+    sleep 2
+  done
+  if [[ "${ready}" -ne 1 ]]; then
+    echo "WARNING: Postgres did not become ready within 120s; skipped password reconciliation." >&2
+    return 0
+  fi
+  if TAG="${HEALTHDM_IMAGE_TAG}" docker compose exec -T -e PGPASSWORD="${db_password}" postgres \
+      psql -h 127.0.0.1 -U "${db_user}" -d "${db_name}" -tAc 'select 1' >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "Postgres volume password differs from .env — resetting user '${db_user}' to the .env value."
+  if TAG="${HEALTHDM_IMAGE_TAG}" docker compose exec -T postgres \
+      psql -U "${db_user}" -d "${db_name}" -v ON_ERROR_STOP=1 -v pw="${db_password}" \
+      -c "ALTER USER ${db_user} WITH PASSWORD :'pw';" >/dev/null; then
+    TAG="${HEALTHDM_IMAGE_TAG}" docker compose restart api worker beat >/dev/null 2>&1 || true
+    echo "Database password reconciled with .env; api/worker/beat restarted."
+  else
+    echo "WARNING: could not reset the Postgres password automatically." >&2
+    echo "Either restore the original .env, or wipe the database volume (DESTROYS DATA):" >&2
+    echo "  cd ${ROOT} && docker compose down -v && bash healthdm-prod-setup.sh --no-download --tag ${HEALTHDM_IMAGE_TAG} --dir ." >&2
+  fi
+}
+reconcile_db_password
+
 echo ""
 echo "Done."
 echo "  App:   http://localhost:${PRODUCTION_HTTP_PORT:-8800}"
